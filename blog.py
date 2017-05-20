@@ -247,17 +247,20 @@ class CreatePost(BlogHandler):
 class DeletePost(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
-        user = self.is_user()
-        if post.author == user:
-            if not post:
-                self.redirect('/SignIn')
-            else:
-                self.render('post.html', post=post)
-                post.delete()
-                self.redirect('/')
+        if key:
+        	post = db.get(key)
+        	user = self.is_user()
+        	if post and post.author == user:
+        		if not post:
+        			self.redirect('/SignIn')
+        		else:
+        			self.render('post.html', post=post)
+        			post.delete()
+        			self.redirect('/')
+        	else:
+        		self.redirect('/%s?error=notPostOwner')
         else:
-            self.redirect('/%s?error=notPostOwner')
+        	self.redirect('/%s?error=noPost')
 
 
 # user can edit there own post
@@ -265,7 +268,7 @@ class DeletePost(BlogHandler):
 class EditPost(BlogHandler):
     def get(self, post_id):
         client = self.is_user()
-        if client and post:
+        if client:
             post_key = db.Key.from_path('Post', int(post_id),
                                         parent=blog_key())
             post = db.get(post_key)
